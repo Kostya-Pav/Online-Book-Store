@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Exclude Maven Wrapper
+.mvn/wrapper/
+
+.gitattributes
+mvnw
+mvnw.cmd
