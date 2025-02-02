@@ -1,0 +1,28 @@
+package com.onlinebookstore.service;
+
+import com.onlinebookstore.model.Book;
+import com.onlinebookstore.repository.BookRepository;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class BookServiceImpl implements BookService {
+
+    private final BookRepository bookRepository;
+
+    @Autowired
+    public BookServiceImpl(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
+
+    @Override
+    public Book save(Book book) {
+        return null;
+    }
+
+    @Override
+    public List findAll() {
+        return List.of();
+    }
+}
