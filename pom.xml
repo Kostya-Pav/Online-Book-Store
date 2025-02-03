@@ -19,6 +19,8 @@
         <maven.compiler.target>17</maven.compiler.target>
         <springboot-version>3.4.2</springboot-version>
         <maven.checkstyle.plugin.configLocation>checkstyle.xml</maven.checkstyle.plugin.configLocation>
+        <sonar.organization>kostya-pav</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencyManagement>
