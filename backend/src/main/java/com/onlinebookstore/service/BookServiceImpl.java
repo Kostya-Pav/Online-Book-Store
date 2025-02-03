@@ -2,13 +2,14 @@ package com.onlinebookstore.service;
 
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.BookRepository;
+
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BookServiceImpl implements BookService {
-
     private final BookRepository bookRepository;
 
     @Autowired
@@ -18,11 +19,11 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book save(Book book) {
-        return null;
+        return bookRepository.save(book);
     }
 
     @Override
     public List findAll() {
-        return List.of();
+        return bookRepository.findAll();
     }
 }
