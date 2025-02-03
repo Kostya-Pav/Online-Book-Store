@@ -7,7 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 class OnlineBookStoreApplicationTests {
 
 	@Test
-	void contextLoads() {
-	}
+    void contextLoads() {
+		// Test to ensure the application context loads successfully
+    }
 
 }
