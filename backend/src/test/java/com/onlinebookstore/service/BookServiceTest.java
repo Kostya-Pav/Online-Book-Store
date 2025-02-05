@@ -1,8 +1,7 @@
-package com.onlinebookstore;
+package com.onlinebookstore.service;
 
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.BookRepository;
-import com.onlinebookstore.service.BookServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
