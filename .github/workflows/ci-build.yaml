@@ -14,3 +14,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'zulu'
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Kostya-Pav_Online-Book-Store
