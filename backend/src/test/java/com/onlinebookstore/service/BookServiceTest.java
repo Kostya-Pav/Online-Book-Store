@@ -1,11 +1,19 @@
 package com.onlinebookstore.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
 import com.onlinebookstore.dto.BookDto;
 import com.onlinebookstore.dto.CreateBookRequestDto;
 import com.onlinebookstore.exception.EntityNotFoundException;
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.BookRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,13 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
     @Mock
@@ -30,7 +32,6 @@ class BookServiceTest {
 
     @InjectMocks
     private BookServiceImpl bookService;
-
     private Book book;
     private BookDto bookDto;
     private CreateBookRequestDto createBookRequestDto;
@@ -70,9 +71,7 @@ class BookServiceTest {
         when(bookMapper.toModel(createBookRequestDto)).thenReturn(book);
         when(bookRepository.save(book)).thenReturn(book);
         when(bookMapper.toDto(book)).thenReturn(bookDto);
-
         BookDto savedBook = bookService.save(createBookRequestDto);
-
         assertNotNull(savedBook);
         assertEquals(bookDto, savedBook);
     }
@@ -82,9 +81,7 @@ class BookServiceTest {
     void findAllBooks_Success() {
         when(bookRepository.findAll()).thenReturn(List.of(book));
         when(bookMapper.toDto(book)).thenReturn(bookDto);
-
         List<BookDto> books = bookService.findAll();
-
         assertNotNull(books);
         assertEquals(1, books.size());
         assertEquals(bookDto, books.get(0));
@@ -95,9 +92,7 @@ class BookServiceTest {
     void getBookById_Success() {
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
         when(bookMapper.toDto(book)).thenReturn(bookDto);
-
         BookDto foundBook = bookService.getBookById(1L);
-
         assertNotNull(foundBook);
         assertEquals(bookDto, foundBook);
     }
@@ -106,8 +101,8 @@ class BookServiceTest {
     @DisplayName("Should throw EntityNotFoundException when book is not found by id")
     void getBookById_NotFound() {
         when(bookRepository.findById(1L)).thenReturn(Optional.empty());
-
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> bookService.getBookById(1L));
+        Exception exception = assertThrows(EntityNotFoundException.class,
+                () -> bookService.getBookById(1L));
         assertEquals("Can't find book by id1", exception.getMessage());
     }
 }

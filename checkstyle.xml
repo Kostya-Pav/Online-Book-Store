@@ -247,7 +247,4 @@
             <property name="validateComments" value="true"/>
         </module>
     </module>
-    <module name="SuppressionFilter">
-        <property name="file" value="checkstyle_suppressions.xml"/>
-    </module>
 </module>
