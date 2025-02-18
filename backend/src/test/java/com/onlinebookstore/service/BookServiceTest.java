@@ -1,74 +1,113 @@
 package com.onlinebookstore.service;
 
+import com.onlinebookstore.dto.BookDto;
+import com.onlinebookstore.dto.CreateBookRequestDto;
+import com.onlinebookstore.exception.EntityNotFoundException;
+import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
-import org.mockito.Mock;
-
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
     @Mock
     private BookRepository bookRepository;
 
+    @Mock
+    private BookMapper bookMapper;
+
+    @InjectMocks
     private BookServiceImpl bookService;
+
+    private Book book;
+    private BookDto bookDto;
+    private CreateBookRequestDto createBookRequestDto;
 
     @BeforeEach
     void setUp() {
-        bookService = new BookServiceImpl(bookRepository);
-    }
+        createBookRequestDto = new CreateBookRequestDto();
+        createBookRequestDto.setTitle("New book");
+        createBookRequestDto.setAuthor("John Doe");
+        createBookRequestDto.setIsbn("ISBN 3322");
+        createBookRequestDto.setPrice(BigDecimal.valueOf(19.99));
+        createBookRequestDto.setDescription("Description");
+        createBookRequestDto.setCoverImage("New Image");
 
-    @Test
-    @DisplayName("Given a book, check if the book is saved to the repository")
-    void isBookSaveToDB_save_true() {
-        Book book = new Book();
+        book = new Book();
         book.setId(1L);
         book.setTitle("New book");
         book.setAuthor("John Doe");
         book.setIsbn("ISBN 3322");
         book.setPrice(BigDecimal.valueOf(19.99));
+        book.setDescription("Description");
+        book.setCoverImage("New Image");
 
-        when(bookRepository.save(book)).thenReturn(book);
-
-        Book savedBook = bookService.save(book);
-
-        verify(bookRepository).save(book);
-
-        assertEquals(book, savedBook);
+        bookDto = new BookDto();
+        bookDto.setId(1L);
+        bookDto.setTitle("New book");
+        bookDto.setAuthor("John Doe");
+        bookDto.setIsbn("ISBN 3322");
+        bookDto.setPrice(BigDecimal.valueOf(19.99));
+        bookDto.setDescription("Description");
+        bookDto.setCoverImage("New Image");
     }
 
     @Test
-    @DisplayName("Given a book, check if all books are retrieved from the repository")
-    void isAllBooksRetrieved_findAll_true() {
-        Book book1 = new Book();
-        book1.setId(1L);
-        book1.setTitle("Book 1");
-        book1.setAuthor("John Doe");
-        book1.setIsbn("ISBN 1111");
-        book1.setPrice(BigDecimal.valueOf(14.99));
+    @DisplayName("Should save book and return BookDto")
+    void saveBook_Success() {
+        when(bookMapper.toModel(createBookRequestDto)).thenReturn(book);
+        when(bookRepository.save(book)).thenReturn(book);
+        when(bookMapper.toDto(book)).thenReturn(bookDto);
 
-        Book book2 = new Book();
-        book2.setId(2L);
-        book2.setTitle("Book 2");
-        book2.setAuthor("Jane Doe");
-        book2.setIsbn("ISBN 2222");
-        book2.setPrice(BigDecimal.valueOf(19.99));
+        BookDto savedBook = bookService.save(createBookRequestDto);
 
-        when(bookRepository.findAll()).thenReturn(List.of(book1, book2));
+        assertNotNull(savedBook);
+        assertEquals(bookDto, savedBook);
+    }
 
-        List<Book> allBooks = bookService.findAll();
+    @Test
+    @DisplayName("Should retrieve all books and return list of BookDto")
+    void findAllBooks_Success() {
+        when(bookRepository.findAll()).thenReturn(List.of(book));
+        when(bookMapper.toDto(book)).thenReturn(bookDto);
 
-        verify(bookRepository).findAll();
+        List<BookDto> books = bookService.findAll();
 
-        assertEquals(List.of(book1, book2), allBooks);
+        assertNotNull(books);
+        assertEquals(1, books.size());
+        assertEquals(bookDto, books.get(0));
+    }
+
+    @Test
+    @DisplayName("Should return BookDto when book is found by id")
+    void getBookById_Success() {
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        when(bookMapper.toDto(book)).thenReturn(bookDto);
+
+        BookDto foundBook = bookService.getBookById(1L);
+
+        assertNotNull(foundBook);
+        assertEquals(bookDto, foundBook);
+    }
+
+    @Test
+    @DisplayName("Should throw EntityNotFoundException when book is not found by id")
+    void getBookById_NotFound() {
+        when(bookRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> bookService.getBookById(1L));
+        assertEquals("Can't find book by id1", exception.getMessage());
     }
 }
