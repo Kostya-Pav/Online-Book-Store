@@ -1,14 +1,14 @@
 package com.onlinebookstore.service;
 
-import com.onlinebookstore.dto.BookDto;
-import com.onlinebookstore.dto.CreateBookRequestDto;
+import com.onlinebookstore.dto.CreateBookRequest;
+import com.onlinebookstore.model.Book;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestBody;
 
 public interface BookService {
-    BookDto save(@RequestBody CreateBookRequestDto requestDto);
+    Book save(@RequestBody CreateBookRequest requestDto);
 
-    List<BookDto> findAll();
+    List<Book> findAll();
 
-    BookDto getBookById(Long id);
+    Book getBookById(Long id);
 }
