@@ -4,6 +4,7 @@ import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.service.BookService;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,8 +31,13 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public BookResponse getById(@PathVariable("id") Long id) {
-        return bookMapper.toDto(bookService.getBookById(id));
+    public ResponseEntity<BookResponse> getById(@PathVariable("id") Long id) {
+        try {
+            BookResponse bookResponse = bookMapper.toDto(bookService.getBookById(id));
+            return ResponseEntity.status(HttpStatus.OK).body(bookResponse);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     @PostMapping
