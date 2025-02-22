@@ -2,13 +2,16 @@ package com.onlinebookstore.service;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.onlinebookstore.controller.BookController;
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.repository.BookRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,34 +27,47 @@ import org.springframework.test.context.TestPropertySource;
 class BookControllerTest {
 
     @Autowired
+    private BookController bookController;
+    @Autowired
     private BookRepository bookRepository;
+    @Autowired
     private BookMapper bookMapper;
 
     @Test
-    void createBook_Success() {
-        CreateBookRequest request = new CreateBookRequest();
-        request.setTitle("New Book");
-        request.setAuthor("John Doe");
-        request.setIsbn("ISBN 3322");
-        request.setPrice(BigDecimal.valueOf(19.99));
-        request.setDescription("A description of the new book");
-        request.setCoverImage("newbook.jpg");
+    void createBookSuccessByController() {
+        CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
+                BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
 
-        BookResponse response = given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when()
-                .post("/api/v1/books")
-                .then().log().all()
-                .statusCode(201)
-                .extract().as(BookResponse.class);
+        BookResponse response = bookController.create(request).getBody();
 
         assertThat(response).isNotNull();
         assertThat(response.getTitle()).isEqualTo(request.getTitle());
+        assertThat(response.getAuthor()).isEqualTo(request.getAuthor());
+        assertThat(response.getIsbn()).isEqualTo(request.getIsbn());
+        assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
+        assertThat(response.getDescription()).isEqualTo(request.getDescription());
+        assertThat(response.getCoverImage()).isEqualTo(request.getCoverImage());
     }
 
     @Test
-    void getAllBooks_Success() {
+    void createBookSuccess() {
+        CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
+                BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
+
+        BookResponse response = getResponse(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getTitle()).isEqualTo(request.getTitle());
+        assertThat(response.getAuthor()).isEqualTo(request.getAuthor());
+        assertThat(response.getIsbn()).isEqualTo(request.getIsbn());
+        assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
+        assertThat(response.getDescription()).isEqualTo(request.getDescription());
+        assertThat(response.getCoverImage()).isEqualTo(request.getCoverImage());
+    }
+
+    @Test
+    void getAllBooksSuccess() {
+        createTwoBooks();
         List<BookResponse> books = given()
                 .when()
                 .get("/api/v1/books")
@@ -59,49 +75,49 @@ class BookControllerTest {
                 .statusCode(200)
                 .extract().jsonPath().getList("", BookResponse.class);
 
-        assertThat(books).isNotEmpty();
+        assertThat(books).hasSize(2);
+        assertThat(books.get(0).getTitle()).isEqualTo("Book 1");
+        assertThat(books).extracting(BookResponse::getAuthor).contains("Author 2");
+        assertThat(books).doesNotHaveDuplicates();
     }
 
     @Test
-    void getBookById_Success() {
-        CreateBookRequest request = new CreateBookRequest();
-        request.setTitle("Book for Testing");
-        request.setAuthor("John Doe");
-        request.setIsbn("ISBN 1234");
-        request.setPrice(BigDecimal.valueOf(25.99));
-        request.setDescription("Test book description");
-        request.setCoverImage("testbook.jpg");
+    void getBookByIdSuccess() {
+        CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
+                BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
 
-        BookResponse createdBook = given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when()
-                .post("/api/v1/books")
-                .then()
-                .statusCode(201)
-                .extract().as(BookResponse.class);
-
-        Long createdBookId = createdBook.getId();
+        BookResponse createdBook = getResponse(request);
 
         BookResponse response = given()
                 .when()
-                .get("/api/v1/books/" + createdBookId)
+                .get("/api/v1/books/" + createdBook.getId())
                 .then()
                 .statusCode(200)
                 .extract().as(BookResponse.class);
 
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(createdBookId);
-        assertThat(response.getTitle()).isEqualTo(createdBook.getTitle());
+        assertThat(response.getTitle()).isEqualTo(request.getTitle());
+        assertThat(response.getAuthor()).isEqualTo(request.getAuthor());
+        assertThat(response.getIsbn()).isEqualTo(request.getIsbn());
+        assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
+        assertThat(response.getDescription()).isEqualTo(request.getDescription());
+        assertThat(response.getCoverImage()).isEqualTo(request.getCoverImage());
     }
 
     @Test
     void getBookById_NotFound() {
+        long id = 99999;
         given()
                 .when()
-                .get("/api/v1/books" + "/99999")
+                .get("/api/v1/books" + "/" + id)
                 .then()
                 .statusCode(404);
+
+        assertThatThrownBy(() -> {
+            throw new EntityNotFoundException("Can't find book by id" + id);
+        })
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Can't find book by id" + id);
     }
 
     @BeforeEach
@@ -109,36 +125,49 @@ class BookControllerTest {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
         bookRepository.deleteAll();
-        CreateBookRequest book1 = new CreateBookRequest();
-        book1.setTitle("Book 1");
-        book1.setAuthor("Author 1");
-        book1.setIsbn("ISBN1");
-        book1.setPrice(BigDecimal.valueOf(15.99));
-        book1.setDescription("Description 1");
-        book1.setCoverImage("book1.jpg");
+    }
 
-        CreateBookRequest book2 = new CreateBookRequest();
-        book2.setTitle("Book 2");
-        book2.setAuthor("Author 2");
-        book2.setIsbn("ISBN2");
-        book2.setPrice(BigDecimal.valueOf(25.99));
-        book2.setDescription("Description 2");
-        book2.setCoverImage("book2.jpg");
-
-        given()
+    private static BookResponse getResponse(CreateBookRequest request) {
+        return given()
                 .contentType(ContentType.JSON)
-                .body(book1)
+                .body(request)
                 .when()
                 .post("/api/v1/books")
-                .then().log().all()
-                .statusCode(201);
+                .then()
+                .statusCode(201)
+                .extract().as(BookResponse.class);
+    }
 
+    private static void createTwoBooks() {
+        CreateBookRequest book1 = getCreateBookRequest("Book 1", "Author 1", "ISBN1",
+                BigDecimal.valueOf(15.99), "Description 1", "book1.jpg");
+        CreateBookRequest book2 = getCreateBookRequest("Book 2", "Author 2", "ISBN2",
+                BigDecimal.valueOf(25.99), "Description 2", "book2.jpg");
+
+        createBook(book1);
+        createBook(book2);
+    }
+
+    private static void createBook(CreateBookRequest book) {
         given()
                 .contentType(ContentType.JSON)
-                .body(book2)
+                .body(book)
                 .when()
                 .post("/api/v1/books")
-                .then().log().all()
+                .then()
                 .statusCode(201);
+    }
+
+    private static CreateBookRequest getCreateBookRequest(String title, String author,
+                                                          String isbn, BigDecimal price,
+                                                          String description, String coverImage) {
+        CreateBookRequest request = new CreateBookRequest();
+        request.setTitle(title);
+        request.setAuthor(author);
+        request.setIsbn(isbn);
+        request.setPrice(price);
+        request.setDescription(description);
+        request.setCoverImage(coverImage);
+        return request;
     }
 }
