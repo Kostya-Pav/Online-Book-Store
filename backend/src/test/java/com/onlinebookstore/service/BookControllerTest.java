@@ -19,21 +19,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.TestPropertySource;
 
 @RequiredArgsConstructor
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(locations = "classpath:application-test.properties")
 class BookControllerTest {
-
     @Autowired
     private BookController bookController;
     @Autowired
     private BookRepository bookRepository;
     @Autowired
     private BookMapper bookMapper;
+    @LocalServerPort
+    private int port;
 
-    @Test
     void createBookSuccessByController() {
         CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
                 BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
@@ -123,7 +124,7 @@ class BookControllerTest {
     @BeforeEach
     void setup() {
         RestAssured.baseURI = "http://localhost";
-        RestAssured.port = 8085;
+        RestAssured.port = port;
         bookRepository.deleteAll();
     }
 
