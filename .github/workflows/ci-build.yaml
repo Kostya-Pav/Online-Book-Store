@@ -1,10 +1,23 @@
-name: Java CI and Build
-
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
   build-and-analyze:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: mydb
+          MYSQL_USER: myuser
+          MYSQL_PASSWORD: mypassword
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u myuser --password=mypassword"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -14,7 +27,23 @@ jobs:
         with:
           java-version: '17'
           distribution: 'zulu'
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            nc -z localhost 3306 && echo "MySQL is up" && exit 0
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+          exit 1
       - name: Build with Maven
         run: mvn clean package
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/mydb?useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME: myuser
+          SPRING_DATASOURCE_PASSWORD: mypassword
       - name: Run Tests
         run: mvn test | tee test-results.log
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/mydb?useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME: myuser
+          SPRING_DATASOURCE_PASSWORD: mypassword
