@@ -7,6 +7,7 @@ jobs:
       mysql:
         image: mysql:8
         env:
+          MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: mydb
           MYSQL_USER: myuser
           MYSQL_PASSWORD: mypassword
