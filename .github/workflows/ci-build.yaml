@@ -13,8 +13,6 @@ jobs:
           MYSQL_PASSWORD: mypassword
         ports:
           - 3306:3306
-        options: >-
-          --pid-file=/tmp/mysqld.pid --skip-ssl
 
     steps:
       - uses: actions/checkout@v4
