@@ -28,7 +28,7 @@ public class BookController {
     private final BookMapper bookMapper;
 
     @GetMapping
-    public ResponseEntity<List<BookResponse>>  getAll() {
+    public ResponseEntity<List<BookResponse>> getAll() {
         List<BookResponse> list = bookService.findAll().stream()
                 .map(bookMapper::toDto)
                 .toList();

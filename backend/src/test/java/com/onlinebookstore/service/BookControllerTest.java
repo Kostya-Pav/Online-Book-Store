@@ -31,7 +31,6 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private BookMapper bookMapper;
 
-
     @BeforeEach
     void setup() {
         bookRepository.deleteAll();
@@ -118,7 +117,8 @@ class BookControllerTest extends BaseTest {
                 .when()
                 .get("/api/v1/books" + "/" + id);
 
-        assertEquals(404, response.getStatusCode(), "Controller should respond with HttpStatus.NOT_FOUND");
+        assertEquals(404, response.getStatusCode(),
+                "Controller should respond with HttpStatus.NOT_FOUND");
     }
 
     private BookResponse createBook(CreateBookRequest request) {
@@ -128,7 +128,8 @@ class BookControllerTest extends BaseTest {
                 .when()
                 .post("/api/v1/books");
 
-        assertEquals(201, response.getStatusCode(), "Controller should respond with HttpStatus.CREATED");
+        assertEquals(201, response.getStatusCode(),
+                "Controller should respond with HttpStatus.CREATED");
 
         return response.body().as(new TypeRef<BookResponse>() {
         });
