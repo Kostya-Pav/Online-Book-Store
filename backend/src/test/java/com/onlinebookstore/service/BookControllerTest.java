@@ -25,8 +25,6 @@ import org.springframework.test.context.TestPropertySource;
 class BookControllerTest extends BaseTest {
     @Autowired
     private BookRepository bookRepository;
-    @Autowired
-    private BookMapper bookMapper;
 
     @BeforeEach
     void setup() {
