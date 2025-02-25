@@ -25,8 +25,6 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(locations = "classpath:application-test.properties")
 class BookControllerTest extends BaseTest {
     @Autowired
-    private BookController bookController;
-    @Autowired
     private BookRepository bookRepository;
     @Autowired
     private BookMapper bookMapper;
@@ -34,21 +32,6 @@ class BookControllerTest extends BaseTest {
     @BeforeEach
     void setup() {
         bookRepository.deleteAll();
-    }
-
-    void createBookSuccessByController() {
-        CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
-                BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
-
-        BookResponse response = bookController.create(request).getBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo(request.getTitle());
-        assertThat(response.getAuthor()).isEqualTo(request.getAuthor());
-        assertThat(response.getIsbn()).isEqualTo(request.getIsbn());
-        assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
-        assertThat(response.getDescription()).isEqualTo(request.getDescription());
-        assertThat(response.getCoverImage()).isEqualTo(request.getCoverImage());
     }
 
     @Test
