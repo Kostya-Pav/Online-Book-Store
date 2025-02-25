@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.onlinebookstore.BaseTest;
-import com.onlinebookstore.controller.BookController;
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
