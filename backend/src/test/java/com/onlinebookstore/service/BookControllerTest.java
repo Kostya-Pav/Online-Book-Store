@@ -2,7 +2,7 @@ package com.onlinebookstore.service;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.onlinebookstore.BaseTest;
 import com.onlinebookstore.controller.BookController;
@@ -10,8 +10,9 @@ import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.repository.BookRepository;
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
-import jakarta.persistence.EntityNotFoundException;
+import io.restassured.response.Response;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -70,12 +71,14 @@ class BookControllerTest extends BaseTest {
     @Test
     void getAllBooksSuccess() {
         createTwoBooks();
-        List<BookResponse> books = given()
+        Response response = given()
                 .when()
-                .get("/api/v1/books")
-                .then()
-                .statusCode(200)
-                .extract().jsonPath().getList("", BookResponse.class);
+                .get("/api/v1/books");
+
+        assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
+
+        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {
+        });
 
         assertThat(books).hasSize(2);
         assertThat(books.get(0).getTitle()).isEqualTo("Book 1");
@@ -90,41 +93,45 @@ class BookControllerTest extends BaseTest {
 
         BookResponse createdBook = createBook(request);
 
-        BookResponse response = given()
+        Response response = given()
                 .when()
-                .get("/api/v1/books/" + createdBook.getId())
-                .then()
-                .statusCode(200)
-                .extract().as(BookResponse.class);
+                .get("/api/v1/books/" + createdBook.getId());
 
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo(request.getTitle());
-        assertThat(response.getAuthor()).isEqualTo(request.getAuthor());
-        assertThat(response.getIsbn()).isEqualTo(request.getIsbn());
-        assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
-        assertThat(response.getDescription()).isEqualTo(request.getDescription());
-        assertThat(response.getCoverImage()).isEqualTo(request.getCoverImage());
+        assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
+
+        BookResponse book = response.body().as(new TypeRef<BookResponse>() {
+        });
+
+        assertThat(book).isNotNull();
+        assertThat(book.getTitle()).isEqualTo(request.getTitle());
+        assertThat(book.getAuthor()).isEqualTo(request.getAuthor());
+        assertThat(book.getIsbn()).isEqualTo(request.getIsbn());
+        assertThat(book.getPrice()).isEqualByComparingTo(request.getPrice());
+        assertThat(book.getDescription()).isEqualTo(request.getDescription());
+        assertThat(book.getCoverImage()).isEqualTo(request.getCoverImage());
     }
 
     @Test
     void getBookById_NotFound() {
         long id = 99999;
-        given()
+        Response response = given()
                 .when()
-                .get("/api/v1/books" + "/" + id)
-                .then()
-                .statusCode(404);
+                .get("/api/v1/books" + "/" + id);
+
+        assertEquals(404, response.getStatusCode(), "Controller should respond with HttpStatus.NOT_FOUND");
     }
 
     private BookResponse createBook(CreateBookRequest request) {
-        return given()
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
-                .post("/api/v1/books")
-                .then()
-                .statusCode(201)
-                .extract().as(BookResponse.class);
+                .post("/api/v1/books");
+
+        assertEquals(201, response.getStatusCode(), "Controller should respond with HttpStatus.CREATED");
+
+        return response.body().as(new TypeRef<BookResponse>() {
+        });
     }
 
     private void createTwoBooks() {
