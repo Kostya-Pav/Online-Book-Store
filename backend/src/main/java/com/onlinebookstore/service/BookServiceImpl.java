@@ -1,6 +1,5 @@
 package com.onlinebookstore.service;
 
-import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.BookRepository;
@@ -16,8 +15,7 @@ public class BookServiceImpl implements BookService {
     private final BookMapper bookMapper;
 
     @Override
-    public Book save(CreateBookRequest requestDto) {
-        Book book = bookMapper.toModel(requestDto);
+    public Book save(Book book) {
         return bookRepository.save(book);
     }
 

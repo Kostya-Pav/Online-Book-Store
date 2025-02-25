@@ -1,13 +1,17 @@
 package com.onlinebookstore.controller;
 
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
+import com.onlinebookstore.model.Book;
 import com.onlinebookstore.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,25 +28,27 @@ public class BookController {
     private final BookMapper bookMapper;
 
     @GetMapping
-    public List<BookResponse> getAll() {
-        return bookService.findAll().stream()
+    public ResponseEntity<List<BookResponse>>  getAll() {
+        List<BookResponse> list = bookService.findAll().stream()
                 .map(bookMapper::toDto)
                 .toList();
+        return ResponseEntity.status(OK).body(list);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getById(@PathVariable("id") Long id) {
         try {
             BookResponse bookResponse = bookMapper.toDto(bookService.getBookById(id));
-            return ResponseEntity.status(HttpStatus.OK).body(bookResponse);
+            return ResponseEntity.status(OK).body(bookResponse);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(NOT_FOUND).build();
         }
     }
 
     @PostMapping
     public ResponseEntity<BookResponse> create(@RequestBody CreateBookRequest bookDto) {
-        BookResponse savedBook = bookMapper.toDto(bookService.save(bookDto));
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
+        Book book = bookService.save(bookMapper.toModel(bookDto));
+        BookResponse savedBook = bookMapper.toDto(book);
+        return ResponseEntity.status(CREATED).body(savedBook);
     }
 }
