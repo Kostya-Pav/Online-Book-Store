@@ -7,15 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.onlinebookstore.BaseTest;
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
-import com.onlinebookstore.mapper.BookMapper;
+import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.BookRepository;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -26,114 +28,117 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private BookRepository bookRepository;
 
-    @BeforeEach
-    void setup() {
-        bookRepository.deleteAll();
+    private final List<Long> createdBookIds = new ArrayList<>();
+
+    @AfterEach
+    void tearDown() {
+        bookRepository.deleteAllById(createdBookIds);
+        createdBookIds.clear();
     }
 
     @Test
-    void createBookSuccess() {
-        CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
-                BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
+    void callCreateBookEndpointSuccess() {
+        CreateBookRequest request = getCallCreateBookEndpointRequest("New Book", "John Doe",
+                "ISBN 3322", BigDecimal.valueOf(19.99), "A description of the new book",
+                "newbook.jpg");
 
-        BookResponse response = createBook(request);
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/api/v1/books");
 
-        assertThat(response).isNotNull();
-        assertThat(response.getTitle()).isEqualTo(request.getTitle());
-        assertThat(response.getAuthor()).isEqualTo(request.getAuthor());
-        assertThat(response.getIsbn()).isEqualTo(request.getIsbn());
-        assertThat(response.getPrice()).isEqualByComparingTo(request.getPrice());
-        assertThat(response.getDescription()).isEqualTo(request.getDescription());
-        assertThat(response.getCoverImage()).isEqualTo(request.getCoverImage());
+        assertEquals(201, response.getStatusCode(),
+                "Controller should respond with HttpStatus.CREATED");
+
+        BookResponse bookResponse = response.body().as(BookResponse.class);
+
+        createdBookIds.add(bookResponse.getId());
+
+        Book savedBook = bookRepository.findById(bookResponse.getId()).orElseThrow(
+                () -> new EntityNotFoundException("Can't find book by id" + bookResponse.getId())
+        );
+
+        assertThat(bookResponse.getId()).isEqualTo(savedBook.getId());
+        assertThat(bookResponse).isNotNull();
+        assertThat(bookResponse.getTitle()).isEqualTo(request.getTitle());
+        assertThat(bookResponse.getAuthor()).isEqualTo(request.getAuthor());
+        assertThat(bookResponse.getIsbn()).isEqualTo(request.getIsbn());
+        assertThat(bookResponse.getPrice()).isEqualByComparingTo(request.getPrice());
+        assertThat(bookResponse.getDescription()).isEqualTo(request.getDescription());
+        assertThat(bookResponse.getCoverImage()).isEqualTo(request.getCoverImage());
     }
 
     @Test
     void getAllBooksSuccess() {
-        createTwoBooks();
+        Book book1ToSave = bookTemplate(book -> {
+            book.setTitle("Book 2");
+            book.setIsbn("ISBN2");
+        });
+        Book book2ToSave = bookTemplate(book -> {
+            book.setTitle("Book 3");
+            book.setIsbn("ISBN3");
+        });
+        Book savedBook1 = bookRepository.save(book1ToSave);
+        Book savedBook2 = bookRepository.save(book2ToSave);
+
+        createdBookIds.add(savedBook1.getId());
+        createdBookIds.add(savedBook2.getId());
+
         Response response = given()
-                .when()
                 .get("/api/v1/books");
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {
-        });
+        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {});
 
         assertThat(books).hasSize(2);
-        assertThat(books.get(0).getTitle()).isEqualTo("Book 1");
-        assertThat(books).extracting(BookResponse::getAuthor).contains("Author 2");
+        assertThat(books.get(0).getTitle()).isEqualTo("Book 2");
+        assertThat(books).extracting(BookResponse::getAuthor).contains("Author");
         assertThat(books).doesNotHaveDuplicates();
     }
 
     @Test
     void getBookByIdSuccess() {
-        CreateBookRequest request = getCreateBookRequest("New Book", "John Doe", "ISBN 3322",
-                BigDecimal.valueOf(19.99), "A description of the new book", "newbook.jpg");
-
-        BookResponse createdBook = createBook(request);
+        Book bookToSave = bookTemplate(book -> {});
+        Book savedBook = bookRepository.save(bookToSave);
 
         Response response = given()
-                .when()
-                .get("/api/v1/books/" + createdBook.getId());
+                .get("/api/v1/books/" + savedBook.getId());
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        BookResponse book = response.body().as(new TypeRef<BookResponse>() {
-        });
+        BookResponse book = response.body().as(new TypeRef<BookResponse>() {});
+
+        createdBookIds.add(book.getId());
 
         assertThat(book).isNotNull();
-        assertThat(book.getTitle()).isEqualTo(request.getTitle());
-        assertThat(book.getAuthor()).isEqualTo(request.getAuthor());
-        assertThat(book.getIsbn()).isEqualTo(request.getIsbn());
-        assertThat(book.getPrice()).isEqualByComparingTo(request.getPrice());
-        assertThat(book.getDescription()).isEqualTo(request.getDescription());
-        assertThat(book.getCoverImage()).isEqualTo(request.getCoverImage());
+        assertThat(book.getTitle()).isEqualTo(savedBook.getTitle());
+        assertThat(book.getAuthor()).isEqualTo(savedBook.getAuthor());
+        assertThat(book.getIsbn()).isEqualTo(savedBook.getIsbn());
+        assertThat(book.getPrice()).isEqualByComparingTo(savedBook.getPrice());
+        assertThat(book.getDescription()).isEqualTo(savedBook.getDescription());
+        assertThat(book.getCoverImage()).isEqualTo(savedBook.getCoverImage());
     }
 
     @Test
     void getBookById_NotFound() {
-        long id = 99999;
+        long id = Long.MAX_VALUE;
         Response response = given()
-                .when()
                 .get("/api/v1/books" + "/" + id);
 
         assertEquals(404, response.getStatusCode(),
                 "Controller should respond with HttpStatus.NOT_FOUND");
     }
 
-    private BookResponse createBook(CreateBookRequest request) {
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when()
-                .post("/api/v1/books");
-
-        assertEquals(201, response.getStatusCode(),
-                "Controller should respond with HttpStatus.CREATED");
-
-        return response.body().as(new TypeRef<BookResponse>() {
-        });
-    }
-
-    private void createTwoBooks() {
-        CreateBookRequest book1 = getCreateBookRequest("Book 1", "Author 1", "ISBN1",
-                BigDecimal.valueOf(15.99), "Description 1", "book1.jpg");
-        CreateBookRequest book2 = getCreateBookRequest("Book 2", "Author 2", "ISBN2",
-                BigDecimal.valueOf(25.99), "Description 2", "book2.jpg");
-
-        createBook(book1);
-        createBook(book2);
-    }
-
-    private CreateBookRequest getCreateBookRequest(String title, String author,
-                                                   String isbn, BigDecimal price,
-                                                   String description, String coverImage) {
+    private CreateBookRequest getCallCreateBookEndpointRequest(String title, String author,
+                                                               String isbn, BigDecimal price,
+                                                               String descr, String coverImage) {
         CreateBookRequest request = new CreateBookRequest();
         request.setTitle(title);
         request.setAuthor(author);
         request.setIsbn(isbn);
         request.setPrice(price);
-        request.setDescription(description);
+        request.setDescription(descr);
         request.setCoverImage(coverImage);
         return request;
     }
