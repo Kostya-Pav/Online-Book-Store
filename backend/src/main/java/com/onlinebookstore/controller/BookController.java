@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
@@ -58,12 +59,15 @@ public class BookController {
 
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void deleteById(@PathVariable Long id) {
-        bookService.deleteById(id);
+    public void deleteById(@PathVariable("id") Long id) {
+        if (bookService.existsById(id)) {
+            bookService.deleteById(id);
+        }
+        throw new ResponseStatusException(NOT_FOUND, "Book not found");
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookResponse> updateById(@PathVariable Long id,
+    public ResponseEntity<BookResponse> updateById(@PathVariable("id") Long id,
                                                    @RequestBody CreateBookRequest bookDto) {
         Book updatedBook = bookService.updateBook(id, bookMapper.toModel(bookDto));
         return ResponseEntity.status(OK).body(bookMapper.toDto(updatedBook));

@@ -13,4 +13,6 @@ public interface BookService {
     void deleteById(Long id);
 
     Book updateBook(Long id, Book updatedBook);
+
+    boolean existsById(Long id);
 }

@@ -130,6 +130,52 @@ class BookControllerTest extends BaseTest {
                 "Controller should respond with HttpStatus.NOT_FOUND");
     }
 
+    @Test
+    void deleteByIdSuccess() {
+        Book bookToSave = bookTemplate(book -> {
+            book.setIsbn("ISBN11");
+        });
+        Book savedBook = bookRepository.save(bookToSave);
+        createdBookIds.add(savedBook.getId());
+
+        Response response = given()
+                .delete("/api/v1/books" + "/" + savedBook.getId());
+
+        assertEquals(404, response.getStatusCode(),
+                "Controller should respond with HttpStatus.NO_CONTENT");
+
+        assertThat(bookRepository.existsById(savedBook.getId())).isFalse();
+    }
+
+    @Test
+    void updateByIdSuccess() {
+        Book bookToSave = bookTemplate(book -> {
+            book.setIsbn("ISBN10");
+        });
+        Book savedBook = bookRepository.save(bookToSave);
+        createdBookIds.add(savedBook.getId());
+
+        CreateBookRequest request = getCallCreateBookEndpointRequest("Updated Book", "New Author",
+                "ISBN4", BigDecimal.valueOf(29.99), "A new description of the updated book",
+                "updatedbook.jpg");
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(request)
+                .put("/api/v1/books" + "/" + savedBook.getId());
+
+        assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
+
+        BookResponse updatedBook = response.body().as(BookResponse.class);
+
+        assertThat(updatedBook.getTitle()).isEqualTo(request.getTitle());
+        assertThat(updatedBook.getAuthor()).isEqualTo(request.getAuthor());
+        assertThat(updatedBook.getIsbn()).isEqualTo(request.getIsbn());
+        assertThat(updatedBook.getPrice()).isEqualByComparingTo(request.getPrice());
+        assertThat(updatedBook.getDescription()).isEqualTo(request.getDescription());
+        assertThat(updatedBook.getCoverImage()).isEqualTo(request.getCoverImage());
+    }
+
     private CreateBookRequest getCallCreateBookEndpointRequest(String title, String author,
                                                                String isbn, BigDecimal price,
                                                                String descr, String coverImage) {

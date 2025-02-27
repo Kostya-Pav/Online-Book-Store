@@ -46,4 +46,9 @@ public class BookServiceImpl implements BookService {
         book.setCoverImage(updatedBook.getCoverImage());
         return bookRepository.save(book);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return bookRepository.existsById(id);
+    }
 }
