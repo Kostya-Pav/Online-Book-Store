@@ -1,6 +1,7 @@
 package com.onlinebookstore.service;
 
 import com.onlinebookstore.model.Book;
+import com.onlinebookstore.model.SearchParameters;
 import java.util.List;
 
 public interface BookService {
@@ -15,4 +16,6 @@ public interface BookService {
     Book updateBook(Long id, Book updatedBook);
 
     boolean existsById(Long id);
+
+    List<Book> searchBooks(SearchParameters searchParameters);
 }

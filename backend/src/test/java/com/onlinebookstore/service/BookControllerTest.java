@@ -8,7 +8,7 @@ import com.onlinebookstore.BaseTest;
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.model.Book;
-import com.onlinebookstore.repository.BookRepository;
+import com.onlinebookstore.repository.book.BookRepository;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;

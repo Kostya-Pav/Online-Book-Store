@@ -9,6 +9,7 @@ import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.model.Book;
+import com.onlinebookstore.model.SearchParameters;
 import com.onlinebookstore.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -71,5 +72,13 @@ public class BookController {
                                                    @RequestBody CreateBookRequest bookDto) {
         Book updatedBook = bookService.updateBook(id, bookMapper.toModel(bookDto));
         return ResponseEntity.status(OK).body(bookMapper.toDto(updatedBook));
+    }
+
+    @GetMapping("/search")
+    public List<BookResponse> searchBooks(SearchParameters searchParameters) {
+        return bookService.searchBooks(searchParameters)
+                .stream()
+                .map(bookMapper::toDto)
+                .toList();
     }
 }

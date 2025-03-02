@@ -2,10 +2,13 @@ package com.onlinebookstore.service;
 
 import com.onlinebookstore.mapper.BookMapper;
 import com.onlinebookstore.model.Book;
-import com.onlinebookstore.repository.BookRepository;
+import com.onlinebookstore.model.SearchParameters;
+import com.onlinebookstore.repository.book.BookRepository;
+import com.onlinebookstore.repository.book.BookSpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
+    private final BookSpecificationBuilder bookSpecificationBuilder;
 
     @Override
     public Book save(Book book) {
@@ -50,5 +54,11 @@ public class BookServiceImpl implements BookService {
     @Override
     public boolean existsById(Long id) {
         return bookRepository.existsById(id);
+    }
+
+    @Override
+    public List<Book> searchBooks(SearchParameters parameters) {
+        Specification<Book> bookSpecification = bookSpecificationBuilder.build(parameters);
+        return bookRepository.findAll(bookSpecification).stream().toList();
     }
 }
