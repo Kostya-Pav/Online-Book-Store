@@ -1,6 +1,6 @@
 package com.onlinebookstore.model;
 
-import java.math.BigDecimal;
+import java.util.List;
 
-public record SearchParameters(String title, String author, String isbn, BigDecimal price) {
+public record SearchParameters(List<String> title, List<String> author, List<String> isbn) {
 }

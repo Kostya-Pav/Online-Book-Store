@@ -2,7 +2,7 @@ package com.onlinebookstore.repository.book;
 
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.SpecificationProvider;
-import java.util.Arrays;
+import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -13,8 +13,8 @@ public class TitleSpecificationProvider implements SpecificationProvider<Book> {
         return "title";
     }
 
-    public Specification<Book> getSpecification(String[] params) {
+    public Specification<Book> getSpecification(List<String> params) {
         return (root, query, criteriaBuilder) -> root.get("title")
-                .in(Arrays.stream(params).toArray());
+                .in(params);
     }
 }

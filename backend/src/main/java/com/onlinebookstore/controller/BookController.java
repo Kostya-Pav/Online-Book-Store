@@ -35,10 +35,10 @@ public class BookController {
 
     @GetMapping
     public ResponseEntity<List<BookResponse>> getAll() {
-        List<BookResponse> list = bookService.findAll().stream()
+        List<BookResponse> books = bookService.findAll().stream()
                 .map(bookMapper::toDto)
                 .toList();
-        return ResponseEntity.status(OK).body(list);
+        return ResponseEntity.status(OK).body(books);
     }
 
     @GetMapping("/{id}")
@@ -75,10 +75,11 @@ public class BookController {
     }
 
     @GetMapping("/search")
-    public List<BookResponse> searchBooks(SearchParameters searchParameters) {
-        return bookService.searchBooks(searchParameters)
+    public ResponseEntity<List<BookResponse>> searchBooks(SearchParameters searchParameters) {
+        List<BookResponse> books = bookService.searchBooks(searchParameters)
                 .stream()
                 .map(bookMapper::toDto)
                 .toList();
+        return ResponseEntity.status(OK).body(books);
     }
 }
