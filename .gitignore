@@ -38,3 +38,4 @@ build/
 .gitattributes
 mvnw
 mvnw.cmd
+backend/src/main/resources/application-secrets.properties
