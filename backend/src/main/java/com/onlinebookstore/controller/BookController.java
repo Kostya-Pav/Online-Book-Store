@@ -66,13 +66,13 @@ public class BookController {
     @PutMapping("/{id}")
     public ResponseEntity<BookResponse> updateById(@PathVariable("id") Long id,
                                                    @RequestBody CreateBookRequest bookDto) {
-        Book updatedBook = bookService.updateBook(id, bookMapper.toModel(bookDto));
+        Book updatedBook = bookService.update(bookMapper.toModel(bookDto));
         return ResponseEntity.status(OK).body(bookMapper.toDto(updatedBook));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<BookResponse>> searchBooks(SearchParameters searchParameters) {
-        List<BookResponse> books = bookService.searchBooks(searchParameters)
+    public ResponseEntity<List<BookResponse>> search(SearchParameters searchParameters) {
+        List<BookResponse> books = bookService.search(searchParameters)
                 .stream()
                 .map(bookMapper::toDto)
                 .toList();

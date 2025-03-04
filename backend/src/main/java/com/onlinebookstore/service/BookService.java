@@ -13,7 +13,7 @@ public interface BookService {
 
     void deleteById(Long id);
 
-    Book updateBook(Long id, Book updatedBook);
+    Book update(Book book);
 
-    List<Book> searchBooks(SearchParameters searchParameters);
+    List<Book> search(SearchParameters searchParameters);
 }

@@ -44,19 +44,19 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Book updateBook(Long id, Book updatedBook) {
-        Book book = getBookById(id);
-        book.setTitle(updatedBook.getTitle());
-        book.setAuthor(updatedBook.getAuthor());
-        book.setIsbn(updatedBook.getIsbn());
-        book.setPrice(updatedBook.getPrice());
-        book.setDescription(updatedBook.getDescription());
-        book.setCoverImage(updatedBook.getCoverImage());
-        return bookRepository.save(book);
+    public Book update(Book book) {
+        Book bookToUpdate = getBookById(book.getId());
+        bookToUpdate.setTitle(book.getTitle());
+        bookToUpdate.setAuthor(book.getAuthor());
+        bookToUpdate.setIsbn(book.getIsbn());
+        bookToUpdate.setPrice(book.getPrice());
+        bookToUpdate.setDescription(book.getDescription());
+        bookToUpdate.setCoverImage(book.getCoverImage());
+        return bookRepository.save(bookToUpdate);
     }
 
     @Override
-    public List<Book> searchBooks(SearchParameters parameters) {
+    public List<Book> search(SearchParameters parameters) {
         Specification<Book> bookSpecification = bookSpecificationBuilder.build(parameters);
         return bookRepository.findAll(bookSpecification).stream().toList();
     }
