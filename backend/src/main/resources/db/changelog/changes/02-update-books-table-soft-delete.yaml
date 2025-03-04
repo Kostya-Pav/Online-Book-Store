@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: update-books-table-soft-delete
+      author: Pavlyk Konstantin
+      changes:
+        - dropColumn:
+            tableName: books
+            columnName: is_deleted
+        - addColumn:
+            tableName: books
+            columns:
+              - column:
+                  name: deleted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
