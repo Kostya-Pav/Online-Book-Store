@@ -9,7 +9,6 @@ import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.repository.book.BookRepository;
-import com.onlinebookstore.repository.book.BookSpecificationProviderManager;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -28,8 +27,6 @@ import org.springframework.test.context.TestPropertySource;
 class BookControllerTest extends BaseTest {
     @Autowired
     private BookRepository bookRepository;
-    @Autowired
-    private BookSpecificationProviderManager bookSpecificationProviderManager;
 
     private final List<Long> createdBookIds = new ArrayList<>();
 
@@ -69,6 +66,22 @@ class BookControllerTest extends BaseTest {
         assertThat(bookResponse.getPrice()).isEqualByComparingTo(request.getPrice());
         assertThat(bookResponse.getDescription()).isEqualTo(request.getDescription());
         assertThat(bookResponse.getCoverImage()).isEqualTo(request.getCoverImage());
+    }
+
+    @Test
+    void createBookWhenTitleNullShouldFail() {
+        CreateBookRequest request = new CreateBookRequest();
+        request.setAuthor("John Doe");
+        request.setIsbn("isbn");
+        request.setPrice(BigDecimal.valueOf(15.25));
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/api/v1/books");
+
+        assertEquals(500, response.getStatusCode(),
+                "Controller should respond with HttpStatus.SERVER_ERROR");
     }
 
     @Test
@@ -151,6 +164,15 @@ class BookControllerTest extends BaseTest {
     }
 
     @Test
+    void deleteByIdWhenBookDoesNotExistShouldReturnNotFound() {
+        Response response = given()
+                .delete("/api/v1/books/" + Integer.MAX_VALUE);
+
+        assertEquals(404, response.getStatusCode(),
+                "Controller should respond with HttpStatus.NOT_FOUND");
+    }
+
+    @Test
     void updateByIdSuccess() {
         Book bookToSave = bookTemplate(book -> {
             book.setIsbn("ISBN10");
@@ -204,7 +226,7 @@ class BookControllerTest extends BaseTest {
         Response response = given()
                 .param("title", "Java Basics")
                 .param("author", "John Doe")
-                .param("іsbn", "ISBN123")
+                .param("іsbn", "ISBN17233")
                 .contentType(ContentType.JSON)
                 .get("/api/v1/books" + "/search");
 
@@ -215,6 +237,39 @@ class BookControllerTest extends BaseTest {
 
         assertThat(books).extracting(BookResponse::getTitle).containsOnly(savedBook1.getTitle());
         assertThat(books).hasSize(1);
+    }
+
+    @Test
+    void searchBookByParamWhenInvalidSortParamShouldIgnoreParam() {
+        Book bookToSave1 = bookTemplate(book -> {
+            book.setTitle("Java Basics");
+            book.setAuthor("John Doe");
+            book.setIsbn("ISBN13212312223");
+            book.setPrice(BigDecimal.valueOf(19.99));
+        });
+
+        Book bookToSave2 = bookTemplate(book -> {
+            book.setTitle("Spring Boot Guide");
+            book.setAuthor("Jane Smith");
+            book.setIsbn("ISBN455556");
+            book.setPrice(BigDecimal.valueOf(25.49));
+        });
+
+        Book savedBook1 = bookRepository.save(bookToSave1);
+        createdBookIds.add(savedBook1.getId());
+
+        Book savedBook2 = bookRepository.save(bookToSave2);
+        createdBookIds.add(savedBook2.getId());
+
+        Response response = given()
+                .param("description", "123")
+                .contentType(ContentType.JSON)
+                .get("/api/v1/books" + "/search");
+
+        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {
+        });
+
+        assertThat(books).hasSize(2);
     }
 
     private CreateBookRequest getCallCreateBookEndpointRequest(String title, String author,
