@@ -15,7 +15,5 @@ public interface BookService {
 
     Book updateBook(Long id, Book updatedBook);
 
-    boolean existsById(Long id);
-
     List<Book> searchBooks(SearchParameters searchParameters);
 }

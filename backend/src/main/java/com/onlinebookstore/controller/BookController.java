@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
@@ -61,10 +60,7 @@ public class BookController {
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping("/{id}")
     public void deleteById(@PathVariable("id") Long id) {
-        if (bookService.existsById(id)) {
-            bookService.deleteById(id);
-        }
-        throw new ResponseStatusException(NOT_FOUND, "Book not found");
+        bookService.deleteById(id);
     }
 
     @PutMapping("/{id}")
