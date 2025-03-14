@@ -8,6 +8,7 @@ import com.onlinebookstore.repository.book.BookRepository;
 import com.onlinebookstore.repository.book.BookSpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Book getBookById(Long id) {
+    public Book getById(Long id) {
         return bookRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Can't find book by id" + id));
     }
@@ -40,24 +41,20 @@ public class BookServiceImpl implements BookService {
         if (bookRepository.existsById(id)) {
             bookRepository.deleteById(id);
         }
+        //ToDo change to EntityNotFoundException
         throw new ResponseStatusException(NOT_FOUND, "Book not found with id: " + id);
     }
 
     @Override
-    public Book update(Book book) {
-        Book bookToUpdate = getBookById(book.getId());
-        bookToUpdate.setTitle(book.getTitle());
-        bookToUpdate.setAuthor(book.getAuthor());
-        bookToUpdate.setIsbn(book.getIsbn());
-        bookToUpdate.setPrice(book.getPrice());
-        bookToUpdate.setDescription(book.getDescription());
-        bookToUpdate.setCoverImage(book.getCoverImage());
+    public Book update(Long id, Consumer<Book> modifier) {
+        Book bookToUpdate = getById(id);
+        modifier.accept(bookToUpdate);
         return bookRepository.save(bookToUpdate);
     }
 
     @Override
     public List<Book> search(SearchParameters parameters) {
         Specification<Book> bookSpecification = bookSpecificationBuilder.build(parameters);
-        return bookRepository.findAll(bookSpecification).stream().toList();
+        return bookRepository.findAll(bookSpecification);
     }
 }

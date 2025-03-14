@@ -1,5 +1,8 @@
 package com.onlinebookstore.repository.book;
 
+import static org.springframework.util.ReflectionUtils.getField;
+import static org.springframework.util.ReflectionUtils.makeAccessible;
+
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.model.SearchParameters;
 import com.onlinebookstore.repository.SpecificationBuilder;
@@ -9,7 +12,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ReflectionUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -23,8 +25,8 @@ public class BookSpecificationBuilder implements SpecificationBuilder<Book> {
         Field[] fields = SearchParameters.class.getDeclaredFields();
 
         for (Field field : fields) {
-            ReflectionUtils.makeAccessible(field);
-            Object fieldValue = ReflectionUtils.getField(field, searchParameters);
+            makeAccessible(field);
+            Object fieldValue = getField(field, searchParameters);
             if (fieldValue != null && !fieldValue.toString().isEmpty()) {
                 specification = specification.and(bookSpecificationProviderManager
                         .getSpecificationProvider(field.getName())

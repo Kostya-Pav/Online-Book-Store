@@ -14,7 +14,7 @@ public class IsbnSpecificationProvider implements SpecificationProvider<Book> {
     }
 
     public Specification<Book> getSpecification(List<String> params) {
-        return (root, query, criteriaBuilder) -> root.get("isbn")
-                .in(params);
+        return (root, query, criteriaBuilder)
+                -> root.get("isbn").in(params);
     }
 }
