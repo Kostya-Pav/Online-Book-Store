@@ -226,7 +226,7 @@ class BookControllerTest extends BaseTest {
         Response response = given()
                 .param("title", "Java Basics")
                 .param("author", "John Doe")
-                .param("іsbn", "ISBN17233")
+                .param("isbn", "ISBN123")
                 .contentType(ContentType.JSON)
                 .get("/api/v1/books" + "/search");
 
