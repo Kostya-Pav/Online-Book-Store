@@ -41,7 +41,7 @@ public class BookServiceImpl implements BookService {
         if (bookRepository.existsById(id)) {
             bookRepository.deleteById(id);
         }
-        //ToDo change to EntityNotFoundException
+        // change to EntityNotFoundException
         throw new ResponseStatusException(NOT_FOUND, "Book not found with id: " + id);
     }
 
