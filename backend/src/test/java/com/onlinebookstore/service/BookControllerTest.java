@@ -80,8 +80,8 @@ class BookControllerTest extends BaseTest {
                 .body(request)
                 .post("/api/v1/books");
 
-        assertEquals(500, response.getStatusCode(),
-                "Controller should respond with HttpStatus.SERVER_ERROR");
+        assertEquals(400, response.getStatusCode(),
+                "Controller should respond with HttpStatus.BAD_REQUEST");
     }
 
     @Test
