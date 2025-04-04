@@ -15,6 +15,7 @@ import com.onlinebookstore.model.Book;
 import com.onlinebookstore.model.SearchParameters;
 import com.onlinebookstore.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
@@ -56,7 +57,7 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<BookResponse> create(@RequestBody CreateBookRequest bookDto) {
+    public ResponseEntity<BookResponse> create(@RequestBody @Valid CreateBookRequest bookDto) {
         Book book = bookService.save(bookMapper.toModel(bookDto));
         BookResponse savedBook = bookMapper.toDto(book);
         return ResponseEntity.status(CREATED).body(savedBook);
