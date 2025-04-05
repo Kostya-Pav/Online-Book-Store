@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +40,8 @@ public class BookController {
     private final BookMapper bookMapper;
 
     @GetMapping
-    public ResponseEntity<List<BookResponse>> getAll() {
-        List<BookResponse> books = bookService.findAll().stream()
+    public ResponseEntity<List<BookResponse>> getAll(Pageable pageable) {
+        List<BookResponse> books = bookService.findAll(pageable).stream()
                 .map(bookMapper::toDto)
                 .toList();
         return ResponseEntity.status(OK).body(books);

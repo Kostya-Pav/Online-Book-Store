@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +24,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> findAll() {
-        return bookRepository.findAll();
+    public List<Book> findAll(Pageable pageable) {
+        return bookRepository.findAll(pageable).getContent();
     }
 
     @Override
