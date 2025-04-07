@@ -2,7 +2,6 @@ package com.onlinebookstore.controller;
 
 import static org.springframework.data.util.ReflectionUtils.setField;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.util.ReflectionUtils.getField;
@@ -16,7 +15,6 @@ import com.onlinebookstore.model.SearchParameters;
 import com.onlinebookstore.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -53,15 +51,11 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    @Operation (summary = "Get book by id",
+    @Operation(summary = "Get book by id",
             description = "Returns a book by its unique identifier. Returns 404 if not found.")
     public ResponseEntity<BookResponse> getById(@PathVariable("id") Long id) {
-        try {
-            BookResponse bookResponse = bookMapper.toDto(bookService.getById(id));
-            return ResponseEntity.status(OK).body(bookResponse);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(NOT_FOUND).build();
-        }
+        BookResponse bookResponse = bookMapper.toDto(bookService.getById(id));
+        return ResponseEntity.status(OK).body(bookResponse);
     }
 
     @PostMapping
