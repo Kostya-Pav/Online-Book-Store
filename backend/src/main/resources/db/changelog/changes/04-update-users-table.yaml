@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: update-users-table
+      author: Pavlyk Konstantin
+      changes:
+        - renameColumn:
+            tableName: users
+            oldColumnName: firstname
+            newColumnName: first_name
+            columnDataType: VARCHAR(255)
+        - renameColumn:
+            tableName: users
+            oldColumnName: lastName
+            newColumnName: last_name
+            columnDataType: VARCHAR(255)
+        - renameColumn:
+            tableName: users
+            oldColumnName: shippingAddress
+            newColumnName: shipping_address
+            columnDataType: VARCHAR(255)
