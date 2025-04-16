@@ -23,7 +23,6 @@ public class AuthController {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-
     @PostMapping("/registration")
     public ResponseEntity<UserResponse> register(@RequestBody UserRegistrationRequest request) {
         User user = userMapper.toModel(request, passwordEncoder);

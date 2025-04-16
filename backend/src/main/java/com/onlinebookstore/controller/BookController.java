@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,7 @@ public class BookController {
     private final BookService bookService;
     private final BookMapper bookMapper;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping
     @Operation (summary = "Get all books",
             description = "Returns a paginated list of all books in the catalog.")
@@ -50,6 +52,7 @@ public class BookController {
         return ResponseEntity.status(OK).body(books);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/{id}")
     @Operation(summary = "Get book by id",
             description = "Returns a book by its unique identifier. Returns 404 if not found.")
@@ -58,6 +61,7 @@ public class BookController {
         return ResponseEntity.status(OK).body(bookResponse);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     @Operation (summary = "Create new book",
             description = "Creates a new book and returns the saved book with it's ID.")
@@ -67,6 +71,7 @@ public class BookController {
         return ResponseEntity.status(CREATED).body(savedBook);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete book by ID",
@@ -76,6 +81,7 @@ public class BookController {
         bookService.deleteById(id);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/{id}")
     @Operation(summary = "Update book by ID",
             description = "Updates an existing book's data. Fields with null values are ignored."
@@ -88,6 +94,7 @@ public class BookController {
         return ResponseEntity.status(OK).body(bookMapper.toDto(updatedBook));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/search")
     @Operation(summary = "Search books by parameters",
             description = "Allows searching books using custom "
