@@ -14,7 +14,7 @@ public class UserServiceImpl implements UserService {
     public User register(User user)
             throws IllegalArgumentException {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Can't register user");
+            throw new IllegalArgumentException("Can't register user. Email already exist.");
         }
         return userRepository.save(user);
     }

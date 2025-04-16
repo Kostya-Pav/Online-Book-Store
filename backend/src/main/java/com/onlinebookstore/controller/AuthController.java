@@ -9,6 +9,7 @@ import com.onlinebookstore.model.User;
 import com.onlinebookstore.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,11 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserService userService;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
 
     @PostMapping("/registration")
     public ResponseEntity<UserResponse> register(@RequestBody UserRegistrationRequest request) {
-        User user = userService.register(userMapper.toModel(request));
-        UserResponse userResponse = userMapper.toDto(user);
+        User user = userMapper.toModel(request, passwordEncoder);
+        UserResponse userResponse = userMapper.toDto(userService.register(user));
         return ResponseEntity.status(CREATED).body(userResponse);
     }
 }
