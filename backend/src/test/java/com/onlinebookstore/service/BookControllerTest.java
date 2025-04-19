@@ -8,7 +8,12 @@ import com.onlinebookstore.BaseTest;
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.model.Book;
+import com.onlinebookstore.model.Role;
+import com.onlinebookstore.model.RoleName;
+import com.onlinebookstore.model.User;
 import com.onlinebookstore.repository.book.BookRepository;
+import com.onlinebookstore.repository.user.RoleRepository;
+import com.onlinebookstore.repository.user.UserRepository;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -18,8 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 
 @RequiredArgsConstructor
@@ -28,7 +35,33 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private final List<Long> createdBookIds = new ArrayList<>();
+
+    @BeforeEach
+    void setupAdminUser() {
+        Role adminRole = roleRepository.findByName(RoleName.ADMIN)
+                .orElseGet(() -> roleRepository.save(new Role(RoleName.ADMIN)));
+
+        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
+            User admin = new User();
+            admin.setEmail("admin@example.com");
+            admin.setPassword(passwordEncoder.encode("admin1234"));
+            admin.setFirstName("Admin");
+            admin.setLastName("User");
+            admin.setShippingAddress("Some address");
+            admin.getRoles().add(adminRole);
+            userRepository.save(admin);
+        }
+    }
 
     @AfterEach
     void tearDown() {
@@ -44,6 +77,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .body(request)
                 .post("/api/v1/books");
 
@@ -77,6 +111,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .body(request)
                 .post("/api/v1/books");
 
@@ -101,11 +136,13 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .get("/api/v1/books");
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {});
+        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {
+        });
 
         assertThat(books).hasSize(2);
         assertThat(books.get(0).getTitle()).isEqualTo("Book 2");
@@ -115,15 +152,18 @@ class BookControllerTest extends BaseTest {
 
     @Test
     void getBookByIdSuccess() {
-        Book bookToSave = bookTemplate(book -> {});
+        Book bookToSave = bookTemplate(book -> {
+        });
         Book savedBook = bookRepository.save(bookToSave);
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .get("/api/v1/books/" + savedBook.getId());
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        BookResponse book = response.body().as(new TypeRef<BookResponse>() {});
+        BookResponse book = response.body().as(new TypeRef<BookResponse>() {
+        });
 
         createdBookIds.add(book.getId());
 
@@ -140,6 +180,7 @@ class BookControllerTest extends BaseTest {
     void getBookById_NotFound() {
         long id = Long.MAX_VALUE;
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .get("/api/v1/books" + "/" + id);
 
         assertEquals(404, response.getStatusCode(),
@@ -155,6 +196,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook.getId());
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .delete("/api/v1/books" + "/" + savedBook.getId());
 
         assertEquals(404, response.getStatusCode(),
@@ -166,6 +208,7 @@ class BookControllerTest extends BaseTest {
     @Test
     void deleteByIdWhenBookDoesNotExistShouldReturnNotFound() {
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .delete("/api/v1/books/" + Integer.MAX_VALUE);
 
         assertEquals(404, response.getStatusCode(),
@@ -186,6 +229,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .body(request)
                 .put("/api/v1/books" + "/" + savedBook.getId());
 
@@ -224,6 +268,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .param("title", "Java Basics")
                 .param("author", "John Doe")
                 .param("isbn", "ISBN123")
@@ -262,6 +307,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .param("description", "123")
                 .contentType(ContentType.JSON)
                 .get("/api/v1/books" + "/search");
