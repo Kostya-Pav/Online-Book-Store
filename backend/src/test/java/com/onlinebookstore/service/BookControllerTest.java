@@ -72,7 +72,7 @@ class BookControllerTest extends BaseTest {
     @Test
     void callCreateBookEndpointSuccess() {
         CreateBookRequest request = getCallCreateBookEndpointRequest("New Book", "John Doe",
-                "ISBN 3322", BigDecimal.valueOf(19.99), "A description of the new book",
+                "978-3-16-148410-0", BigDecimal.valueOf(19.99), "A description of the new book",
                 "newbook.jpg");
 
         Response response = given()

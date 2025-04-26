@@ -2,15 +2,13 @@ package com.onlinebookstore.exeption;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,44 +23,59 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
             HttpHeaders headers,
             HttpStatusCode status,
             WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        prepareErrorResponse(body, HttpStatus.BAD_REQUEST);
         List<String> errors = ex.getBindingResult().getAllErrors().stream()
-                .map(this::getErrorMessage)
+                .map(e -> {
+                    if (e instanceof FieldError fieldError) {
+                        return fieldError.getField() + " " + fieldError.getDefaultMessage();
+                    }
+                    return e.getDefaultMessage();
+                })
                 .toList();
-        body.put("errors", errors);
-        return new ResponseEntity<>(body, headers, status);
+        Message message = Message.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST)
+                .errors(errors)
+                .build();
+        return new ResponseEntity<>(message, headers, status);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Object> handleEntityNotFoundException(
             EntityNotFoundException ex,
             WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        prepareErrorResponse(body, HttpStatus.NOT_FOUND);
-        body.put("massage", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        Message message = getMessage(ex, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(
             IllegalArgumentException ex,
             WebRequest request) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        prepareErrorResponse(body, HttpStatus.BAD_REQUEST);
-        body.put("massage", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        Message message = getMessage(ex, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
 
-    private static void prepareErrorResponse(Map<String, Object> body, HttpStatus httpStatus) {
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", httpStatus);
+    @ExceptionHandler(UsernameConflictException.class)
+    public ResponseEntity<Object> handleUsernameConflictException(
+            UsernameConflictException ex,
+            WebRequest request) {
+        Message message = getMessage(ex, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 
-    private String getErrorMessage(ObjectError e) {
-        if (e instanceof FieldError fieldError) { // Используем pattern matching
-            return fieldError.getField() + " " + fieldError.getDefaultMessage();
-        }
-        return e.getDefaultMessage();
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(
+            AccessDeniedException ex,
+            WebRequest request) {
+        Message message = getMessage(ex, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    private static Message getMessage(Exception ex, HttpStatus status) {
+        return Message.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status)
+                .textMessage(ex.getMessage())
+                .build();
     }
 }

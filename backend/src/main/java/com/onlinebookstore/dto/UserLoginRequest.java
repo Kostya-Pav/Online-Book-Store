@@ -1,16 +1,16 @@
 package com.onlinebookstore.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 @Data
 public class UserLoginRequest {
-    @NotNull
+    @NotBlank
     @Email
     private String email;
-    @NotNull
+    @NotBlank
     @Length(min = 8, max = 20)
     private String password;
 }

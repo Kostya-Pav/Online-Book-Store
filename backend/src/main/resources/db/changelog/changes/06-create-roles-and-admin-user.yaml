@@ -69,7 +69,7 @@ databaseChangeLog:
                   value: admin@example.com
               - column:
                   name: password
-                  value: $2a$10$9DXi5TgZmnHvHzStxe7NwOOoQde5Kf5aXCGbbON7OHLfupEn.Nzz2  # password: admin1234
+                  value: $2a$10$9DXi5TgZmnHvHzStxe7NwOOoQde5Kf5aXCGbbON7OHLfupEn.Nzz2
               - column:
                   name: first_name
                   value: Admin
