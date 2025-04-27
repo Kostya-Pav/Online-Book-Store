@@ -36,6 +36,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 @RequiredArgsConstructor
 @TestPropertySource(locations = "classpath:application-test.properties")
 class BookControllerTest extends BaseTest {
+    private static final String ADMIN_MAIL = "admin@example.com";
+    private static final String ADMIN_PASS = "admin1234";
     @Autowired
     private BookRepository bookRepository;
 
@@ -54,8 +56,6 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
-    private static final String ADMIN_MAIL = "admin@example.com";
-    private static final String ADMIN_PASS = "admin1234";
     private final List<Long> createdBookIds = new ArrayList<>();
     private final List<Long> createdUserIds = new ArrayList<>();
 
@@ -64,7 +64,7 @@ class BookControllerTest extends BaseTest {
         Role adminRole = roleRepository.findByName(RoleName.ADMIN)
                 .orElseGet(() -> roleRepository.save(new Role(RoleName.ADMIN)));
 
-        if (userRepository.findByEmail(ADMIN_MAIL).isEmpty()) {
+        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             User admin = new User();
             admin.setEmail(ADMIN_MAIL);
             admin.setPassword(passwordEncoder.encode(ADMIN_PASS));
@@ -284,7 +284,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .param("title", "Java Basics")
                 .param("author", "John Doe")
                 .param("isbn", "ISBN123")
@@ -323,7 +323,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .param("description", "123")
                 .contentType(ContentType.JSON)
                 .get("/api/v1/books" + "/search");
