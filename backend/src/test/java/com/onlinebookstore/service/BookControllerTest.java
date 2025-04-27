@@ -17,6 +17,7 @@ import com.onlinebookstore.repository.user.UserRepository;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,6 +29,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @RequiredArgsConstructor
 @TestPropertySource(locations = "classpath:application-test.properties")
@@ -44,7 +48,14 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
     private final List<Long> createdBookIds = new ArrayList<>();
+    private final List<Long> createdUserIds = new ArrayList<>();
 
     @BeforeEach
     void setupAdminUser() {
@@ -60,11 +71,14 @@ class BookControllerTest extends BaseTest {
             admin.setShippingAddress("Some address");
             admin.getRoles().add(adminRole);
             userRepository.save(admin);
+            createdUserIds.add(admin.getId());
         }
     }
 
     @AfterEach
     void tearDown() {
+        forceDeleteUsersByIds(createdUserIds);
+        createdUserIds.clear();
         bookRepository.deleteAllById(createdBookIds);
         createdBookIds.clear();
     }
@@ -329,5 +343,26 @@ class BookControllerTest extends BaseTest {
         request.setDescription(descr);
         request.setCoverImage(coverImage);
         return request;
+    }
+
+    private void forceDeleteUsersByIds(List<Long> createdUserIds) {
+        TransactionStatus status = transactionManager
+                .getTransaction(new DefaultTransactionDefinition());
+        try {
+            for (Long userId : createdUserIds) {
+                entityManager.createNativeQuery("DELETE FROM users_roles WHERE user_id = ?")
+                        .setParameter(1, userId)
+                        .executeUpdate();
+
+                entityManager.createNativeQuery("DELETE FROM users WHERE id = ?")
+                        .setParameter(1, userId)
+                        .executeUpdate();
+            }
+            createdUserIds.clear();
+            transactionManager.commit(status);
+        } catch (Exception ex) {
+            transactionManager.rollback(status);
+            throw new RuntimeException("Error deleting users", ex);
+        }
     }
 }
