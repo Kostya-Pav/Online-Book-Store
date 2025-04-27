@@ -54,6 +54,8 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
+    private static final String ADMIN_MAIL = "admin@example.com";
+    private static final String ADMIN_PASS = "admin1234";
     private final List<Long> createdBookIds = new ArrayList<>();
     private final List<Long> createdUserIds = new ArrayList<>();
 
@@ -62,10 +64,10 @@ class BookControllerTest extends BaseTest {
         Role adminRole = roleRepository.findByName(RoleName.ADMIN)
                 .orElseGet(() -> roleRepository.save(new Role(RoleName.ADMIN)));
 
-        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
+        if (userRepository.findByEmail(ADMIN_MAIL).isEmpty()) {
             User admin = new User();
-            admin.setEmail("admin@example.com");
-            admin.setPassword(passwordEncoder.encode("admin1234"));
+            admin.setEmail(ADMIN_MAIL);
+            admin.setPassword(passwordEncoder.encode(ADMIN_PASS));
             admin.setFirstName("Admin");
             admin.setLastName("User");
             admin.setShippingAddress("Some address");
@@ -91,7 +93,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .body(request)
                 .post("/api/v1/books");
 
@@ -125,7 +127,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .body(request)
                 .post("/api/v1/books");
 
@@ -150,7 +152,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .get("/api/v1/books");
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
@@ -171,7 +173,7 @@ class BookControllerTest extends BaseTest {
         Book savedBook = bookRepository.save(bookToSave);
 
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .get("/api/v1/books/" + savedBook.getId());
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
@@ -194,7 +196,7 @@ class BookControllerTest extends BaseTest {
     void getBookById_NotFound() {
         long id = Long.MAX_VALUE;
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .get("/api/v1/books" + "/" + id);
 
         assertEquals(404, response.getStatusCode(),
@@ -210,7 +212,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook.getId());
 
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .delete("/api/v1/books" + "/" + savedBook.getId());
 
         assertEquals(404, response.getStatusCode(),
@@ -222,7 +224,7 @@ class BookControllerTest extends BaseTest {
     @Test
     void deleteByIdWhenBookDoesNotExistShouldReturnNotFound() {
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .delete("/api/v1/books/" + Integer.MAX_VALUE);
 
         assertEquals(404, response.getStatusCode(),
@@ -243,7 +245,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .body(request)
                 .put("/api/v1/books" + "/" + savedBook.getId());
 
@@ -282,7 +284,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .param("title", "Java Basics")
                 .param("author", "John Doe")
                 .param("isbn", "ISBN123")
@@ -321,7 +323,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
-                .auth().preemptive().basic("admin@example.com", "admin1234")
+                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
                 .param("description", "123")
                 .contentType(ContentType.JSON)
                 .get("/api/v1/books" + "/search");
