@@ -29,7 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(AbstractHttpConfigurer::disable)//додати обробку фільтрів
-                .csrf(csrf -> csrf.disable())//додати обробку фільтрів
+                .csrf(AbstractHttpConfigurer::disable)//додати обробку фільтрів
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers("/api/v1/auth/**", "/error",
