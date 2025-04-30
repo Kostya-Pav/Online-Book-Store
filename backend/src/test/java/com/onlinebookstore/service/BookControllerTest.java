@@ -126,8 +126,7 @@ class BookControllerTest extends BaseTest {
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {
-        });
+        List<BookResponse> books = response.jsonPath().getList("content", BookResponse.class);
 
         assertThat(books).hasSize(2);
         assertThat(books.get(0).getTitle()).isEqualTo("Book 2");

@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,10 +46,9 @@ public class BookController {
     @GetMapping
     @Operation (summary = "Get all books",
             description = "Returns a paginated list of all books in the catalog.")
-    public ResponseEntity<List<BookResponse>> getAll(Pageable pageable) {
-        List<BookResponse> books = bookService.findAll(pageable).stream()
-                .map(bookMapper::toDto)
-                .toList();
+    public ResponseEntity<Page<BookResponse>> getAll(Pageable pageable) {
+        Page<BookResponse> books = bookService.findAll(pageable)
+                .map(bookMapper::toDto);
         return ResponseEntity.status(OK).body(books);
     }
 

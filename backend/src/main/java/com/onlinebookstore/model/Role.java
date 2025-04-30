@@ -10,10 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "roles")
 @Data
+@NoArgsConstructor
 public class Role implements Serializable {
     private static final long serialVersionUID = 6490633528372946224L;
     @Id
@@ -26,8 +28,5 @@ public class Role implements Serializable {
 
     public Role(RoleName name) {
         this.name = name;
-    }
-
-    public Role() {
     }
 }

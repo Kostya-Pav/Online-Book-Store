@@ -1,7 +1,11 @@
 package com.onlinebookstore.exeption;
 
+import static java.time.LocalDateTime.now;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 import jakarta.persistence.EntityNotFoundException;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,11 +35,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
                     return e.getDefaultMessage();
                 })
                 .toList();
-        Message message = Message.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST)
-                .errors(errors)
-                .build();
+        Message message = new Message(now(), BAD_REQUEST, errors);
         return new ResponseEntity<>(message, headers, status);
     }
 
@@ -43,39 +43,35 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
     public ResponseEntity<Object> handleEntityNotFoundException(
             EntityNotFoundException ex,
             WebRequest request) {
-        Message message = getMessage(ex, HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+        Message message = getMessage(ex, NOT_FOUND);
+        return new ResponseEntity<>(message, NOT_FOUND);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(
             IllegalArgumentException ex,
             WebRequest request) {
-        Message message = getMessage(ex, HttpStatus.BAD_REQUEST);
-        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        Message message = getMessage(ex, BAD_REQUEST);
+        return new ResponseEntity<>(message, BAD_REQUEST);
     }
 
     @ExceptionHandler(UsernameConflictException.class)
     public ResponseEntity<Object> handleUsernameConflictException(
             UsernameConflictException ex,
             WebRequest request) {
-        Message message = getMessage(ex, HttpStatus.CONFLICT);
-        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
+        Message message = getMessage(ex, CONFLICT);
+        return new ResponseEntity<>(message, CONFLICT);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(
             AccessDeniedException ex,
             WebRequest request) {
-        Message message = getMessage(ex, HttpStatus.BAD_REQUEST);
-        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        Message message = getMessage(ex, BAD_REQUEST);
+        return new ResponseEntity<>(message, BAD_REQUEST);
     }
 
     private static Message getMessage(Exception ex, HttpStatus status) {
-        return Message.builder()
-                .timestamp(LocalDateTime.now())
-                .status(status)
-                .textMessage(ex.getMessage())
-                .build();
+        return new Message(now(), status, ex.getMessage());
     }
 }
