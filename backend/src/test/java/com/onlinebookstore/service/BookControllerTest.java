@@ -1,5 +1,9 @@
 package com.onlinebookstore.service;
 
+import static com.onlinebookstore.service.TestSetup.ADMIN_MAIL;
+import static com.onlinebookstore.service.TestSetup.ADMIN_PASS;
+import static com.onlinebookstore.service.TestSetup.USER_MAIL;
+import static com.onlinebookstore.service.TestSetup.USER_PASS;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,16 +12,10 @@ import com.onlinebookstore.BaseTest;
 import com.onlinebookstore.dto.BookResponse;
 import com.onlinebookstore.dto.CreateBookRequest;
 import com.onlinebookstore.model.Book;
-import com.onlinebookstore.model.Role;
-import com.onlinebookstore.model.RoleName;
-import com.onlinebookstore.model.User;
 import com.onlinebookstore.repository.book.BookRepository;
-import com.onlinebookstore.repository.user.RoleRepository;
-import com.onlinebookstore.repository.user.UserRepository;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -27,62 +25,33 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @RequiredArgsConstructor
 @TestPropertySource(locations = "classpath:application-test.properties")
 class BookControllerTest extends BaseTest {
-    private static final String ADMIN_MAIL = "admin@example.com";
-    private static final String ADMIN_PASS = "admin1234";
     @Autowired
     private BookRepository bookRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private TestSetup testSetup;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private TestCleanup testCleanup;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
-    private PlatformTransactionManager transactionManager;
-
-    private final List<Long> createdBookIds = new ArrayList<>();
     private final List<Long> createdUserIds = new ArrayList<>();
+    private final List<Long> createdRoleIds = new ArrayList<>();
+    private final List<Long> createdBookIds = new ArrayList<>();
 
     @BeforeEach
-    void setupAdminUser() {
-        Role adminRole = roleRepository.findByName(RoleName.ADMIN)
-                .orElseGet(() -> roleRepository.save(new Role(RoleName.ADMIN)));
-
-        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
-            User admin = new User();
-            admin.setEmail(ADMIN_MAIL);
-            admin.setPassword(passwordEncoder.encode(ADMIN_PASS));
-            admin.setFirstName("Admin");
-            admin.setLastName("User");
-            admin.setShippingAddress("Some address");
-            admin.getRoles().add(adminRole);
-            userRepository.save(admin);
-            createdUserIds.add(admin.getId());
-        }
+    void setup() {
+        testSetup.createUsers(createdUserIds, createdRoleIds);
     }
 
     @AfterEach
-    void tearDown() {
-        forceDeleteUsersByIds(createdUserIds);
-        createdUserIds.clear();
-        bookRepository.deleteAllById(createdBookIds);
-        createdBookIds.clear();
+    void clean() {
+        testCleanup.cleanupUsersAfterTest(createdUserIds, createdRoleIds);
+        testCleanup.cleanupBooksAfterTest(createdBookIds);
     }
 
     @Test
@@ -93,7 +62,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .body(request)
                 .post("/api/v1/books");
 
@@ -127,7 +96,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .body(request)
                 .post("/api/v1/books");
 
@@ -152,7 +121,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
+                .auth().preemptive().basic(USER_MAIL, USER_PASS)
                 .get("/api/v1/books");
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
@@ -173,7 +142,7 @@ class BookControllerTest extends BaseTest {
         Book savedBook = bookRepository.save(bookToSave);
 
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .get("/api/v1/books/" + savedBook.getId());
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
@@ -196,7 +165,7 @@ class BookControllerTest extends BaseTest {
     void getBookById_NotFound() {
         long id = Long.MAX_VALUE;
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .get("/api/v1/books" + "/" + id);
 
         assertEquals(404, response.getStatusCode(),
@@ -212,7 +181,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook.getId());
 
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .delete("/api/v1/books" + "/" + savedBook.getId());
 
         assertEquals(404, response.getStatusCode(),
@@ -224,7 +193,7 @@ class BookControllerTest extends BaseTest {
     @Test
     void deleteByIdWhenBookDoesNotExistShouldReturnNotFound() {
         Response response = given()
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .delete("/api/v1/books/" + Integer.MAX_VALUE);
 
         assertEquals(404, response.getStatusCode(),
@@ -245,7 +214,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
-                .auth().preemptive().basic(ADMIN_MAIL,ADMIN_PASS)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .body(request)
                 .put("/api/v1/books" + "/" + savedBook.getId());
 
@@ -345,26 +314,5 @@ class BookControllerTest extends BaseTest {
         request.setDescription(descr);
         request.setCoverImage(coverImage);
         return request;
-    }
-
-    private void forceDeleteUsersByIds(List<Long> createdUserIds) {
-        TransactionStatus status = transactionManager
-                .getTransaction(new DefaultTransactionDefinition());
-        try {
-            for (Long userId : createdUserIds) {
-                entityManager.createNativeQuery("DELETE FROM users_roles WHERE user_id = ?")
-                        .setParameter(1, userId)
-                        .executeUpdate();
-
-                entityManager.createNativeQuery("DELETE FROM users WHERE id = ?")
-                        .setParameter(1, userId)
-                        .executeUpdate();
-            }
-            createdUserIds.clear();
-            transactionManager.commit(status);
-        } catch (Exception ex) {
-            transactionManager.rollback(status);
-            throw new RuntimeException("Error deleting users", ex);
-        }
     }
 }
