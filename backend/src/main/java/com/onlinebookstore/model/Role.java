@@ -15,7 +15,7 @@ import lombok.Data;
 @Table(name = "roles")
 @Data
 public class Role implements Serializable {
-    private static final long serialVersionUID = 798347923L;
+    private static final long serialVersionUID = 6490633528372946224L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

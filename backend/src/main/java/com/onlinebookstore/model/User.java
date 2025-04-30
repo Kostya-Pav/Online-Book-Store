@@ -27,7 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @SoftDelete(strategy = SoftDeleteType.DELETED)
 @Table(name = "users")
 public class User implements UserDetails, Serializable {
-    private static final long serialVersionUID = 678347923L;
+    private static final long serialVersionUID = 7487330285004233799L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
