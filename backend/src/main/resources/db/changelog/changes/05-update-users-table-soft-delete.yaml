@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: update-users-table-soft-delete
+      author: Pavlyk Konstantin
+      changes:
+        - dropColumn:
+            tableName: users
+            columnName: is_deleted
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: deleted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false

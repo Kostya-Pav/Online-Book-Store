@@ -1,5 +1,9 @@
 package com.onlinebookstore.service;
 
+import static com.onlinebookstore.service.TestSetup.ADMIN_MAIL;
+import static com.onlinebookstore.service.TestSetup.ADMIN_PASS;
+import static com.onlinebookstore.service.TestSetup.USER_MAIL;
+import static com.onlinebookstore.service.TestSetup.USER_PASS;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -28,22 +33,36 @@ class BookControllerTest extends BaseTest {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private TestSetup testSetup;
+
+    @Autowired
+    private TestCleanup testCleanup;
+
+    private final List<Long> createdUserIds = new ArrayList<>();
+    private final List<Long> createdRoleIds = new ArrayList<>();
     private final List<Long> createdBookIds = new ArrayList<>();
 
+    @BeforeEach
+    void setup() {
+        testSetup.createUsers(createdUserIds, createdRoleIds);
+    }
+
     @AfterEach
-    void tearDown() {
-        bookRepository.deleteAllById(createdBookIds);
-        createdBookIds.clear();
+    void clean() {
+        testCleanup.cleanupUsersAfterTest(createdUserIds, createdRoleIds);
+        testCleanup.cleanupBooksAfterTest(createdBookIds);
     }
 
     @Test
     void callCreateBookEndpointSuccess() {
         CreateBookRequest request = getCallCreateBookEndpointRequest("New Book", "John Doe",
-                "ISBN 3322", BigDecimal.valueOf(19.99), "A description of the new book",
+                "978-3-16-148410-0", BigDecimal.valueOf(19.99), "A description of the new book",
                 "newbook.jpg");
 
         Response response = given()
                 .contentType(ContentType.JSON)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .body(request)
                 .post("/api/v1/books");
 
@@ -77,11 +96,12 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .body(request)
                 .post("/api/v1/books");
 
-        assertEquals(500, response.getStatusCode(),
-                "Controller should respond with HttpStatus.SERVER_ERROR");
+        assertEquals(400, response.getStatusCode(),
+                "Controller should respond with HttpStatus.BAD_REQUEST");
     }
 
     @Test
@@ -101,11 +121,12 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
+                .auth().preemptive().basic(USER_MAIL, USER_PASS)
                 .get("/api/v1/books");
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        List<BookResponse> books = response.body().as(new TypeRef<List<BookResponse>>() {});
+        List<BookResponse> books = response.jsonPath().getList("content", BookResponse.class);
 
         assertThat(books).hasSize(2);
         assertThat(books.get(0).getTitle()).isEqualTo("Book 2");
@@ -115,15 +136,18 @@ class BookControllerTest extends BaseTest {
 
     @Test
     void getBookByIdSuccess() {
-        Book bookToSave = bookTemplate(book -> {});
+        Book bookToSave = bookTemplate(book -> {
+        });
         Book savedBook = bookRepository.save(bookToSave);
 
         Response response = given()
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .get("/api/v1/books/" + savedBook.getId());
 
         assertEquals(200, response.getStatusCode(), "Controller should respond with HttpStatus.OK");
 
-        BookResponse book = response.body().as(new TypeRef<BookResponse>() {});
+        BookResponse book = response.body().as(new TypeRef<BookResponse>() {
+        });
 
         createdBookIds.add(book.getId());
 
@@ -140,6 +164,7 @@ class BookControllerTest extends BaseTest {
     void getBookById_NotFound() {
         long id = Long.MAX_VALUE;
         Response response = given()
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .get("/api/v1/books" + "/" + id);
 
         assertEquals(404, response.getStatusCode(),
@@ -155,6 +180,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook.getId());
 
         Response response = given()
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .delete("/api/v1/books" + "/" + savedBook.getId());
 
         assertEquals(404, response.getStatusCode(),
@@ -166,6 +192,7 @@ class BookControllerTest extends BaseTest {
     @Test
     void deleteByIdWhenBookDoesNotExistShouldReturnNotFound() {
         Response response = given()
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .delete("/api/v1/books/" + Integer.MAX_VALUE);
 
         assertEquals(404, response.getStatusCode(),
@@ -186,6 +213,7 @@ class BookControllerTest extends BaseTest {
 
         Response response = given()
                 .contentType(ContentType.JSON)
+                .auth().preemptive().basic(ADMIN_MAIL, ADMIN_PASS)
                 .body(request)
                 .put("/api/v1/books" + "/" + savedBook.getId());
 
@@ -224,6 +252,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .param("title", "Java Basics")
                 .param("author", "John Doe")
                 .param("isbn", "ISBN123")
@@ -262,6 +291,7 @@ class BookControllerTest extends BaseTest {
         createdBookIds.add(savedBook2.getId());
 
         Response response = given()
+                .auth().preemptive().basic("admin@example.com", "admin1234")
                 .param("description", "123")
                 .contentType(ContentType.JSON)
                 .get("/api/v1/books" + "/search");

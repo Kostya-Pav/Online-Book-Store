@@ -1,7 +1,5 @@
 package com.onlinebookstore.service;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 import com.onlinebookstore.model.Book;
 import com.onlinebookstore.model.SearchParameters;
 import com.onlinebookstore.repository.book.BookRepository;
@@ -10,9 +8,10 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +25,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> findAll() {
-        return bookRepository.findAll();
+    public Page<Book> findAll(Pageable pageable) {
+        return bookRepository.findAll(pageable);
     }
 
     @Override
@@ -41,8 +40,7 @@ public class BookServiceImpl implements BookService {
         if (bookRepository.existsById(id)) {
             bookRepository.deleteById(id);
         }
-        // change to EntityNotFoundException
-        throw new ResponseStatusException(NOT_FOUND, "Book not found with id: " + id);
+        throw new EntityNotFoundException("Book not found with id: " + id);
     }
 
     @Override

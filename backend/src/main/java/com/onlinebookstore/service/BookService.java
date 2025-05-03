@@ -4,11 +4,13 @@ import com.onlinebookstore.model.Book;
 import com.onlinebookstore.model.SearchParameters;
 import java.util.List;
 import java.util.function.Consumer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface BookService {
     Book save(Book book);
 
-    List<Book> findAll();
+    Page<Book> findAll(Pageable pageable);
 
     Book getById(Long id);
 
